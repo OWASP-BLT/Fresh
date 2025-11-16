@@ -25,8 +25,8 @@
     "@typescript-eslint/parser": "^6.10.0",
     "eslint": "^8.53.0",
     "typescript": "^5.2.2",
-    "vitest": "^0.34.6",
-    "wrangler": "^3.15.0"
+    "vitest": "^4.0.9",
+    "wrangler": "^4.47.0"
   },
   "dependencies": {
     "hono": "^3.11.2"
