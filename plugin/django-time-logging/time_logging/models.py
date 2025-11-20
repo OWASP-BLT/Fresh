@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 User = get_user_model()
 
@@ -10,7 +11,7 @@ User = get_user_model()
 class TimeLog(models.Model):
     """Model for tracking time spent on GitHub issues."""
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_logs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='time_logs')
     github_issue_url = models.URLField(help_text='GitHub issue URL being tracked')
     organization_url = models.URLField(blank=True, null=True, help_text='Optional organization URL')
     start_time = models.DateTimeField(auto_now_add=True)
