@@ -24,4 +24,4 @@ ssl
 google-credentials.json
 ansible/inventory.yml
 dist
-django_time_logging.egg-info
+time_logging.egg-info
