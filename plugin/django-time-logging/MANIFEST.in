@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+recursive-include time_logging/templates *
+recursive-include time_logging/static *
+recursive-include time_logging/migrations *.py
+recursive-include time_logging/management *
+recursive-include time_logging/locale *
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude *.orig
+global-exclude *.rej
+global-exclude .DS_Store
