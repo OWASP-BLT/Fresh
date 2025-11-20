@@ -23,6 +23,5 @@ requirements.txt
 ssl
 google-credentials.json
 ansible/inventory.yml
-blt_sizzle.egg-info
 dist
-sizzle.egg-info
+django_time_logging.egg-info
