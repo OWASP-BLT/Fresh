@@ -5,8 +5,6 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 
-User = get_user_model()
-
 
 class TimeLog(models.Model):
     """Model for tracking time spent on GitHub issues."""
