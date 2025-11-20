@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.authtoken.models import Token
 from .models import TimeLog
 import json
 
@@ -70,9 +69,6 @@ def TimeLogListView(request):
     # Regular GET request - render the page
     time_logs = TimeLog.objects.filter(user=request.user).order_by("-start_time")
     active_time_log = time_logs.filter(end_time__isnull=True).first()
-
-    # Get or create token for CSRF protection in AJAX
-    token, created = Token.objects.get_or_create(user=request.user)
     
     return render(
         request,
@@ -80,6 +76,5 @@ def TimeLogListView(request):
         {
             "time_logs": time_logs,
             "active_time_log": active_time_log,
-            "token": token.key,
         },
     )

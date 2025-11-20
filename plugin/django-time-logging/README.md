@@ -101,7 +101,6 @@ class TimeLog(models.Model):
 ## Dependencies
 
 - Django 3.2+
-- djangorestframework (for CSRF tokens)
 - jQuery (loaded from CDN)
 - Tailwind CSS (loaded from CDN)
 
