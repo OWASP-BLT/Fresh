@@ -1,0 +1,303 @@
+<!-- templates/time_logs.html -->
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load static %}
+{% block title %}
+    Time Log
+{% endblock title %}
+{% block description %}
+    Manage your time logs efficiently. Start new time logs, view active logs, and review existing time logs to keep track of your progress.
+{% endblock description %}
+{% block keywords %}
+    Time Log, Start Time Log, Active Time Log, Existing Time Logs, Track Time, Time Management
+{% endblock keywords %}
+{% block content %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <div class="container mx-auto mt-12 p-6 bg-white rounded-lg shadow-md">
+        
+        <!-- Message Container for AJAX responses -->
+        <div id="message-container" class="mb-4" aria-live="polite"></div>
+
+        <!-- Start Time Log Form -->
+        {% if not active_time_log %}
+            <form id="start-time-log-form" class="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label for="github_issue_url" class="block text-sm font-medium text-gray-700">
+                        GitHub Issue URL *
+                    </label>
+                    <input type="url" 
+                           id="github_issue_url" 
+                           name="github_issue_url"
+                           required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="https://github.com/user/repo/issues/1">
+                    <p class="text-xs text-gray-500">Enter a valid GitHub issue URL</p>
+                </div>
+                
+                <button type="submit" class="w-full flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                    Start Time Log
+                </button>
+            </form>
+        {% endif %}
+
+        <!-- Active Time Log Section -->
+        {% if active_time_log %}
+            <div class="mt-8 p-6 bg-white rounded-lg shadow-md border border-gray-100">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Active Time Log</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <a href="{{ active_time_log.github_issue_url }}" 
+                           target="_blank" 
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ active_time_log.github_issue_url }}
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-lg font-semibold text-gray-700" id="elapsed-time">00:00:00</span>
+                    </div>
+                    
+                    <button id="stop-time-log-btn"
+                            data-time-log-id="{{ active_time_log.id }}"
+                            class="mt-4 w-full flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
+                        Stop Time Log
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Existing Time Logs -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Existing Time Logs</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Start Time
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                End Time
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Duration
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                GitHub Issue
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="time-logs-table-body">
+                        {% for log in time_logs %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ log.start_time|date:"M j, Y g:i A" }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if log.end_time %}
+                                        {{ log.end_time|date:"M j, Y g:i A" }}
+                                    {% else %}
+                                        <span class="text-green-600 font-medium">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if log.duration %}
+                                        {{ log.duration|format_duration }}
+                                    {% else %}
+                                        <span class="text-blue-600">In Progress</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-blue-600">
+                                    <a href="{{ log.github_issue_url }}" 
+                                       target="_blank" 
+                                       class="hover:underline">
+                                        {{ log.github_issue_url|slice:"19:"|truncatechars:50 }}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                    No time logs available
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CSRF Token Setup
+        function getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === name) {
+                    return decodeURIComponent(value);
+                }
+            }
+            return null;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+        let timerInterval = null;
+
+        // Setup AJAX with CSRF Token
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        $(document).ready(function() {
+            
+            // Real-time Timer for Active Time Log
+            {% if active_time_log %}
+                const startTime = new Date('{{ active_time_log.start_time|date:"c" }}').getTime();
+                
+                function updateElapsedTime() {
+                    const now = Date.now();
+                    const elapsedMilliseconds = now - startTime;
+                    const totalSeconds = Math.floor(elapsedMilliseconds / 1000);
+                    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+                    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+                    const seconds = String(totalSeconds % 60).padStart(2, '0');
+                    $('#elapsed-time').text(`${hours}:${minutes}:${seconds}`);
+                }
+                
+                // Update immediately and then every second
+                updateElapsedTime();
+                timerInterval = setInterval(updateElapsedTime, 1000);
+            {% endif %}
+
+            // Handle Start Time Log Form Submission
+            $('#start-time-log-form').on('submit', function(event) {
+                event.preventDefault();
+                
+                const githubIssueUrl = $('#github_issue_url').val().trim();
+                
+                if (!githubIssueUrl) {
+                    showMessage("Please enter a GitHub issue URL.", "error");
+                    return;
+                }
+                
+                const $button = $(this).find('button[type="submit"]');
+                $button.prop('disabled', true).text('Starting...');
+                
+                $.ajax({
+                    url: '',
+                    type: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    data: JSON.stringify({
+                        action: 'start',
+                        github_issue_url: githubIssueUrl
+                    }),
+                    success: function(data) {
+                        if (data.success) {
+                            showMessage(data.message, "success");
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showMessage(data.message, "error");
+                        }
+                    },
+                    error: function() {
+                        showMessage("An error occurred while starting the time log.", "error");
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false).text('Start Time Log');
+                    }
+                });
+            });
+
+            // Handle Stop Time Log Button Click
+            $('#stop-time-log-btn').on('click', function() {
+                if (!confirm('Are you sure you want to stop this time log?')) {
+                    return;
+                }
+                
+                const timeLogId = $(this).data('time-log-id');
+                const $button = $(this);
+                
+                $button.prop('disabled', true).text('Stopping...');
+                
+                $.ajax({
+                    url: '',
+                    type: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    data: JSON.stringify({
+                        action: 'stop',
+                        time_log_id: timeLogId
+                    }),
+                    success: function(data) {
+                        if (data.success) {
+                            showMessage(data.message, "success");
+                            clearInterval(timerInterval);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showMessage(data.message, "error");
+                        }
+                    },
+                    error: function() {
+                        showMessage("An error occurred while stopping the time log.", "error");
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false).text('Stop Time Log');
+                    }
+                });
+            });
+
+            // Message Display Function
+            function showMessage(message, type = 'error') {
+                const colors = {
+                    error: 'bg-red-100 text-red-700 border-red-200',
+                    success: 'bg-green-100 text-green-700 border-green-200',
+                    warning: 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                };
+                
+                const icon = type === 'error' ? 
+                    '<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>' 
+                    : 
+                    '<svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>';
+                
+                $('#message-container').html(`
+                    <div class="rounded-md p-4 mb-4 ${colors[type]} border">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                ${icon}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm">${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                // Auto-hide success messages after 3 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        $('#message-container').empty();
+                    }, 3000);
+                }
+            }
+        });
+    </script>
+{% endblock content %}
