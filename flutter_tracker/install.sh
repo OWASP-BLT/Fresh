@@ -38,7 +38,9 @@ fi
 
 # Update package list
 echo "Updating package list..."
-sudo apt-get update
+if ! sudo apt-get update; then
+    echo "⚠️  Warning: Failed to update package list. Continuing with existing package information..."
+fi
 
 # Install required system libraries
 echo ""
@@ -57,7 +59,7 @@ REQUIRED_PACKAGES=(
 )
 
 for package in "${REQUIRED_PACKAGES[@]}"; do
-    if dpkg -l | grep -q "^ii  $package"; then
+    if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed'; then
         echo "✅ $package already installed"
     else
         echo "📦 Installing $package..."
@@ -93,7 +95,8 @@ if [ "$FLUTTER_INSTALLED" = false ]; then
         FLUTTER_DIR="$HOME/flutter"
         echo "Installing Flutter to $FLUTTER_DIR..."
         
-        # Clone Flutter repository
+        # Clone Flutter repository (stable branch for production use)
+        # Use -b beta or -b dev if you need cutting-edge features
         cd "$HOME"
         if ! git clone https://github.com/flutter/flutter.git -b stable --depth 1; then
             echo "❌ Failed to clone Flutter repository"
