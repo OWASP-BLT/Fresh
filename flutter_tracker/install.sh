@@ -145,7 +145,11 @@ echo "✅ Flutter found: $(flutter --version | head -n1)"
 echo ""
 echo "Running Flutter doctor to verify installation..."
 echo "(This may take a moment...)"
-flutter doctor || echo "⚠️  Some Flutter doctor checks failed, but installation can proceed"
+if command -v timeout &> /dev/null; then
+    timeout 120 flutter doctor || echo "⚠️  Some Flutter doctor checks failed, but installation can proceed"
+else
+    flutter doctor || echo "⚠️  Some Flutter doctor checks failed, but installation can proceed"
+fi
 
 # Enable Linux desktop support
 echo ""
