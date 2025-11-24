@@ -87,12 +87,12 @@ fi
 
 if [ "$FLUTTER_INSTALLED" = false ]; then
     # Determine Flutter installation directory
-    if [ -d "$HOME/flutter" ]; then
-        echo "⚠️  Flutter directory already exists at $HOME/flutter"
+    FLUTTER_DIR="$HOME/flutter"
+    
+    if [ -d "$FLUTTER_DIR" ]; then
+        echo "⚠️  Flutter directory already exists at $FLUTTER_DIR"
         echo "   Using existing directory..."
-        FLUTTER_DIR="$HOME/flutter"
     else
-        FLUTTER_DIR="$HOME/flutter"
         echo "Installing Flutter to $FLUTTER_DIR..."
         
         # Clone Flutter repository (stable branch for production use)
@@ -116,7 +116,7 @@ if [ "$FLUTTER_INSTALLED" = false ]; then
     fi
     
     if [ -n "$SHELL_RC" ]; then
-        if ! grep -q "flutter/bin" "$SHELL_RC"; then
+        if ! grep -q "export PATH=.*flutter/bin" "$SHELL_RC"; then
             {
                 echo ""
                 echo "# Flutter SDK"
@@ -143,8 +143,9 @@ echo "✅ Flutter found: $(flutter --version | head -n1)"
 
 # Run flutter doctor to check for any issues
 echo ""
-echo "Running Flutter doctor..."
-flutter doctor
+echo "Running Flutter doctor to verify installation..."
+echo "(This may take a moment...)"
+flutter doctor || echo "⚠️  Some Flutter doctor checks failed, but installation can proceed"
 
 # Enable Linux desktop support
 echo ""
